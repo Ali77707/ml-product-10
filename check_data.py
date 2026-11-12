@@ -1,0 +1,10 @@
+import pandas as pd
+df = pd.read_csv('reviews_dataset.csv')
+print(f"File: reviews_dataset.csv")
+print(f"Rows: {len(df)}")
+print(f"Columns: {list(df.columns)}")
+print(f"Rating dist: {df['rating'].value_counts().sort_index().to_dict()}")
+dist = df['sentiment'].value_counts(dropna=False)
+print(f"Sentiment: {dist.to_dict()}")
+print(f"Products: {df['product'].nunique()} -> {sorted(df['product'].unique())}")
+print(df[['text', 'rating', 'product']].head(3).to_string())

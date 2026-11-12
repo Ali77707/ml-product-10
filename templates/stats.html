@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Статистика по товарам</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Товар</th>
+                        <th>Средний рейтинг</th>
+                        <th>Количество отзывов</th>
+                        <th>Доля позитива</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in stats %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ s.product }}</strong></td>
+                        <td>
+                            <span class="badge fs-6 {% if s.avg_rating >= 4 %}bg-success{% elif s.avg_rating >= 3 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                <i class="bi bi-star-fill"></i> {{ s.avg_rating }}
+                            </span>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ s.review_count }}</span></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="progress flex-grow-1 me-2" style="height: 20px;">
+                                    <div class="progress-bar {% if s.positive_share >= 70 %}bg-success{% elif s.positive_share >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                         style="width: {{ s.positive_share }}%;">
+                                        {{ s.positive_share }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

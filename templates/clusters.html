@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Визуализация кластеров</h5>
+    </div>
+    <div class="card-body">
+        <form class="row g-3 align-items-end mb-3" method="GET">
+            <div class="col-auto">
+                <label class="form-label">Метод</label>
+                <select name="method" class="form-select">
+                    <option value="kmeans" {% if method == 'kmeans' %}selected{% endif %}>KMeans</option>
+                    <option value="dbscan" {% if method == 'dbscan' %}selected{% endif %}>DBSCAN</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label">Количество кластеров</label>
+                <input type="number" name="n_clusters" class="form-control" value="{{ n_clusters }}" min="2" max="8">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-repeat"></i> Применить</button>
+            </div>
+        </form>
+        {{ cluster_plot_html | safe }}
+    </div>
+</div>
+
+<div class="row">
+    {% for c in cluster_info %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center
+                {% if c.positive_share >= 60 %}bg-success text-white
+                {% elif c.positive_share >= 30 %}bg-warning text-dark
+                {% else %}bg-danger text-white{% endif %}">
+                <h6 class="mb-0">Кластер {{ c.id }}</h6>
+                <span class="badge bg-light text-dark">{{ c.size }} отзывов</span>
+            </div>
+            <div class="card-body">
+                <p><strong>Доля позитива:</strong> {{ c.positive_share }}%</p>
+                <p><strong>Топ-10 слов:</strong></p>
+                <div class="mb-2">
+                    {% for word in c.top_words[:10] %}
+                    <span class="badge bg-secondary me-1">{{ word }}</span>
+                    {% endfor %}
+                </div>
+                <p><strong>Примеры отзывов:</strong></p>
+                <ul class="list-group list-group-flush small">
+                    {% for ex in c.examples[:5] %}
+                    <li class="list-group-item py-1">{{ ex[:80] }}{% if ex|length > 80 %}...{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

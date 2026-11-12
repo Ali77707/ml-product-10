@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="alert alert-info">
+    <i class="bi bi-trophy-fill"></i> <strong>Лучшая модель:</strong> {{ best_model }}
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="bi bi-table"></i> До подбора гиперпараметров</h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>Модель</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for name in models_names %}
+                        <tr>
+                            <td><strong>{{ name }}</strong></td>
+                            {% set m = results_before[name] %}
+                            <td>{{ "%.1f"|format(m['accuracy']*100) }}%</td>
+                            <td>{{ "%.1f"|format(m['precision']*100) }}%</td>
+                            <td>{{ "%.1f"|format(m['recall']*100) }}%</td>
+                            <td>{{ "%.1f"|format(m['f1']*100) }}%</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-table"></i> После подбора гиперпараметров</h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>Модель</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for name in models_names %}
+                        {% set r = results_after[name] %}
+                        <tr class="{% if name == best_model %}table-success{% endif %}">
+                            <td><strong>{{ name }}</strong> {% if name == best_model %}<i class="bi bi-crown text-warning"></i>{% endif %}</td>
+                            <td>{{ "%.1f"|format(r['metrics']['accuracy']*100) }}%</td>
+                            <td>{{ "%.1f"|format(r['metrics']['precision']*100) }}%</td>
+                            <td>{{ "%.1f"|format(r['metrics']['recall']*100) }}%</td>
+                            <td><strong>{{ "%.1f"|format(r['metrics']['f1']*100) }}%</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h6 class="mb-0"><i class="bi bi-sliders"></i> Подобранные гиперпараметры</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                    <tr><th>Модель</th><th>Параметры</th></tr>
+                </thead>
+                <tbody>
+                    {% for name in models_names %}
+                    <tr>
+                        <td><strong>{{ name }}</strong></td>
+                        <td><code>{{ results_after[name]['best_params'] }}</code></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white">
+        <h6 class="mb-0"><i class="bi bi-graph-up"></i> ROC-кривые</h6>
+    </div>
+    <div class="card-body text-center">
+        {{ roc_html | safe }}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+flask
+pandas
+numpy
+scikit-learn
+matplotlib
+wordcloud
+xgboost
+catboost
+sentence-transformers
+plotly
+pytest

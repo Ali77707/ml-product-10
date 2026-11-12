@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Оставить отзыв</h5>
+            </div>
+            <div class="card-body">
+                <form id="reviewForm">
+                    <div class="mb-3">
+                        <label class="form-label">Товар</label>
+                        <select class="form-select" id="product" required>
+                            <option value="">Выберите товар...</option>
+                            {% for p in products %}
+                            <option value="{{ p }}">{{ p }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Текст отзыва</label>
+                        <textarea class="form-control" id="reviewText" rows="3" placeholder="Напишите ваш отзыв..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Оценка</label>
+                        <div class="rating-stars" id="ratingStars">
+                            {% for i in range(5, 0, -1) %}
+                            <i class="bi bi-star star" data-value="{{ i }}"></i>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" id="rating" value="3">
+                        <span class="ms-2 badge bg-secondary" id="ratingLabel">3 / 5</span>
+                    </div>
+                    <div id="sentimentResult" class="mb-3 d-none">
+                        <div class="alert" id="sentimentAlert">
+                            <span id="sentimentText"></span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-send"></i> Отправить
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="checkSentimentBtn">
+                            <i class="bi bi-robot"></i> Проверить тональность
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="bi bi-star"></i> Распределение оценок</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="data:image/png;base64,{{ dist_plot }}" class="img-fluid" alt="Распределение оценок">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0"><i class="bi bi-wordcloud"></i> Облако слов</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <img src="data:image/png;base64,{{ wc_plot }}" class="img-fluid" alt="Облако слов">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0"><i class="bi bi-graph-up"></i> Динамика отзывов</h6>
+            </div>
+            <div class="card-body text-center">
+                <img src="data:image/png;base64,{{ trend_plot }}" class="img-fluid" alt="Динамика отзывов">
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-person"></i> Рекомендации для вас</h6>
+            </div>
+            <div class="card-body">
+                {% if recommendations %}
+                <ul class="list-group list-group-flush">
+                    {% for rec in recommendations %}
+                    <li class="list-group-item d-flex align-items-center">
+                        <i class="bi bi-bag-check text-success me-2"></i> {{ rec }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">Нет рекомендаций. Оставьте несколько отзывов!</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h6 class="mb-0"><i class="bi bi-arrow-up"></i> Топ товаров по позитиву</h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>Товар</th><th>Позитив</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for p in top_products %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ p.product[:25] }}{% if p.product|length > 25 %}...{% endif %}</td>
+                            <td><span class="badge bg-success">{{ p.positive_share }}%</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0"><i class="bi bi-emoji-frown"></i> Частые слова в негативе</h6>
+            </div>
+            <div class="card-body">
+                <ol class="list-group list-group-numbered">
+                    {% for word, count in neg_words %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ word }}
+                        <span class="badge bg-danger rounded-pill">{{ count }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.star');
+    const ratingInput = document.getElementById('rating');
+    const ratingLabel = document.getElementById('ratingLabel');
+
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const val = parseInt(this.dataset.value);
+            ratingInput.value = val;
+            ratingLabel.textContent = val + ' / 5';
+            stars.forEach(s => {
+                const sv = parseInt(s.dataset.value);
+                if (sv <= val) {
+                    s.className = 'bi bi-star-fill star text-warning';
+                } else {
+                    s.className = 'bi bi-star star';
+                }
+            });
+        });
+    });
+    document.querySelector('.star[data-value="3"]').click();
+
+    document.getElementById('reviewForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const text = document.getElementById('reviewText').value;
+        const rating = document.getElementById('rating').value;
+        const product = document.getElementById('product').value;
+
+        if (!text || !product) {
+            showNotification('Заполните все поля', 'warning');
+            return;
+        }
+
+        fetch('/add_review', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `text=${encodeURIComponent(text)}&rating=${rating}&product=${encodeURIComponent(product)}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                showNotification(data.error, 'danger');
+            } else {
+                showNotification('Отзыв добавлен! Тональность: ' + data.label + ' (' + data.confidence + '%)', 'success');
+                document.getElementById('reviewText').value = '';
+            }
+        });
+    });
+
+    document.getElementById('checkSentimentBtn').addEventListener('click', function() {
+        const text = document.getElementById('reviewText').value;
+        if (!text) {
+            showNotification('Введите текст отзыва', 'warning');
+            return;
+        }
+        fetch('/predict', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `text=${encodeURIComponent(text)}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                showNotification(data.error, 'danger');
+            } else {
+                const div = document.getElementById('sentimentResult');
+                const alert = document.getElementById('sentimentAlert');
+                const span = document.getElementById('sentimentText');
+                div.classList.remove('d-none');
+                const isPos = data.label === 'ПОЗИТИВ';
+                alert.className = `alert alert-${isPos ? 'success' : 'danger'}`;
+                span.innerHTML = `<strong>${data.label}</strong> (уверенность: ${data.confidence}%)`;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

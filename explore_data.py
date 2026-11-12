@@ -1,0 +1,13 @@
+import pandas as pd
+c = pd.read_csv('customer_details.csv')
+print(f"Rows: {len(c)}")
+print(f"Review Rating range: {c['Review Rating'].min():.1f} - {c['Review Rating'].max():.1f}")
+print(f"Unique items: {c['Item Purchased'].nunique()}")
+print(f"Unique categories: {c['Category'].nunique()}")
+print(f"Unique customers: {c['Customer ID'].nunique()}")
+print(f"\nRating distribution:")
+print(c['Review Rating'].value_counts().sort_index().head(15).to_string())
+print(f"\nTop categories:")
+print(c['Category'].value_counts().head(10).to_string())
+print(f"\nSample products:")
+print(c['Item Purchased'].unique()[:20])
